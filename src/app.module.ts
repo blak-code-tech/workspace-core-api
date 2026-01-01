@@ -22,6 +22,7 @@ import { AuthService } from './auth/auth.service';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './auth/auth.guard';
 import { PrismaModule } from './prisma/prisma.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -35,7 +36,8 @@ import { PrismaModule } from './prisma/prisma.module';
     ProjectsModule,
     AuditLogsModule,
     PostsModule,
-    PrismaModule
+    PrismaModule,
+    HealthModule
   ],
   controllers: [AppController, TeamsController, AuditLogsController, PostsController, ProjectsController, AuthController],
   providers: [AppService, UsersService, ProjectsService, PostsService, TeamsService, AuditLogsService, AuthService, {

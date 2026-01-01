@@ -11,14 +11,14 @@ model User {
   email          String          @unique
   firstName      String
   lastName       String
-  password       String
-  role           Role            @default(USER)
-  posts          Post[]
-  projectMembers ProjectMember[]
-  teamMembers    TeamMember[]
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
   deletedAt      DateTime?
+  password       String
+  role           PlatformRole    @default(USER)
+  documents      Document[]
+  projectMembers ProjectMember[]
+  teamMembers    TeamMember[]
 }
 
 model Team {
@@ -26,9 +26,9 @@ model Team {
   name      String
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
-  posts     Post[]
+  deletedAt DateTime?
+  projects  Project[]
   members   TeamMember[]
-  projects  Project[]    @relation("ProjectToTeam")
 }
 
 model TeamMember {
@@ -37,43 +37,56 @@ model TeamMember {
   teamId    String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  team      Team     @relation(fields: [teamId], references: [id])
-  user      User     @relation(fields: [userId], references: [id])
+  role      TeamRole @default(MEMBER)
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, teamId])
+  @@index([teamId])
 }
 
 model Project {
   id             String          @id @default(uuid())
   name           String
-  description    String?
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
-  posts          Post[]
+  deletedAt      DateTime?
+  teamId         String
+  documents      Document[]
+  team           Team            @relation(fields: [teamId], references: [id])
   projectMembers ProjectMember[]
-  teams          Team[]          @relation("ProjectToTeam")
+
+  @@index([teamId])
 }
 
 model ProjectMember {
-  id        String   @id @default(uuid())
+  id        String      @id @default(uuid())
   userId    String
   projectId String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  project   Project  @relation(fields: [projectId], references: [id])
-  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  role      ProjectRole @default(VIEWER)
+  project   Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, projectId])
+  @@index([projectId])
 }
 
-model Post {
-  id        String   @id @default(uuid())
+model Document {
+  id        String    @id @default(uuid())
   title     String
   content   String
   authorId  String
   projectId String
-  teamId    String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  author    User     @relation(fields: [authorId], references: [id])
-  project   Project  @relation(fields: [projectId], references: [id])
-  team      Team     @relation(fields: [teamId], references: [id])
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([authorId])
 }
 
 model AuditLog {
@@ -82,11 +95,26 @@ model AuditLog {
   action    String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  meta      Json?
+
+  @@index([createdAt])
 }
 
-enum Role {
+enum PlatformRole {
   ADMIN
   SUPER_ADMIN
   MANAGER
   USER
+}
+
+enum TeamRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum ProjectRole {
+  ADMIN
+  EDITOR
+  VIEWER
 }
