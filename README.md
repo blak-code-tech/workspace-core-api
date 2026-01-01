@@ -1,98 +1,118 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# workspace-core-api
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+[![NestJS](https://img.shields.io/badge/NestJS-v10.2.2-red)](https://nestjs.com/)
+[![Prisma](https://img.shields.io/badge/Prisma-v5.1-blue)](https://www.prisma.io/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-v16.0-blue)](https://www.postgresql.org/)
+[![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+---
 
-## Description
+## Overview
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+**workspace-core-api** is a production-ready, multi-tenant backend system built with [NestJS](https://nestjs.com/) and [PostgreSQL](https://www.postgresql.org/) using [Prisma ORM](https://www.prisma.io/).  
 
-## Project setup
+It models the core backend architecture of modern SaaS collaboration tools, such as Notion, Linear, and ClickUp, emphasizing **multi-tenant isolation, role-based access control, and secure resource management**. This project is intended as both a portfolio showcase and a reference implementation for building SaaS-ready backends.
 
+The system supports:
+
+- JWT-based authentication with platform-level roles
+- Team and project memberships with fine-grained roles
+- Scoped access to resources (documents)
+- Audit logging and soft-deletion strategies
+- Clean NestJS module architecture
+
+---
+
+## Key Features
+
+### Authentication & Users
+- JWT-based authentication
+- Platform-level roles: `SUPER_ADMIN`, `ADMIN`, `MANAGER`, `USER`
+- Secure password storage
+- Multi-tenant awareness for users
+
+### Teams & TeamMembers
+- Team creation and management
+- Team-level roles: `OWNER`, `ADMIN`, `MEMBER`
+- Membership management with unique constraints
+- Soft-deletion of teams
+
+### Projects & ProjectMembers
+- Projects belong to teams
+- Project-level roles: `ADMIN`, `EDITOR`, `VIEWER`
+- Scoped access for users
+- Soft-delete support
+
+### Documents
+- Documents belong to projects (team inferred via project)
+- Author tracking
+- Soft-deletion
+- Indexed for performant queries
+
+### Audit Logging
+- Logs critical actions (create, update, delete)
+- Optional `meta` JSON for action context
+- Indexed for fast lookups
+
+### Authorization & Guards
+- Decorator-based role enforcement (`@TeamRoles`)
+- Multi-level role validation in services
+- Prevents privilege escalation
+
+---
+
+## Tech Stack
+
+- **Backend Framework:** [NestJS](https://nestjs.com/)  
+- **Database:** [PostgreSQL](https://www.postgresql.org/)  
+- **ORM:** [Prisma](https://www.prisma.io/)  
+- **Validation:** [class-validator](https://github.com/typestack/class-validator)  
+- **Authentication:** JWT  
+- **API Documentation:** [Swagger/OpenAPI](https://swagger.io/)
+
+---
+
+## Getting Started
+
+### Prerequisites
+- Node.js >= 18  
+- pnpm >= 8  
+- Docker (for PostgreSQL)
+
+### Setup
+
+1. **Clone the repository**
 ```bash
-$ pnpm install
+git clone https://github.com/blak-code-tech/workspace-core-api.git
+cd workspace-core-api
 ```
 
-## Compile and run the project
-
+2. **Install dependencies**
 ```bash
-# development
-$ pnpm run start
-
-# watch mode
-$ pnpm run start:dev
-
-# production mode
-$ pnpm run start:prod
+pnpm install
 ```
 
-## Run tests
-
+3. **Configure environment variables**<br>
+**Create a .env file with:**
 ```bash
-# unit tests
-$ pnpm run test
-
-# e2e tests
-$ pnpm run test:e2e
-
-# test coverage
-$ pnpm run test:cov
+DATABASE_URL="postgresql://workspace_user:workspace_password@localhost:5432/workspace_core"
+JWT_SECRET="your_jwt_secret_here"
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
+4. **Start PostgreSQL via Docker**
 ```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
+docker compose up -d
 ```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+5. **Run Prisma migrations**
+```bash
+pnpm exec prisma migrate dev
+```
+6. **Start the backend**
+```bash
+pnpm run start:dev
+```
+7. **Access Swagger API docs**<br>
+Open in your browser:
+``` code
+http://localhost:3000/api
+```
