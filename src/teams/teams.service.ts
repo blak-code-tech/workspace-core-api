@@ -32,12 +32,23 @@ export class TeamsService {
     }
 
     async getTeamById(id: string) {
-        return await this.prisma.team.findUnique({ where: { id, deletedAt: null } });
+        try {
+            return await this.prisma.team.findFirstOrThrow({ where: { id, deletedAt: null } });
+        } catch (error) {
+            console.error(error);
+            throw new BadRequestException('Team not found');
+        }
     }
 
     async getTeamsByUserId(userId: string) {
-        const teamMemberships = await this.prisma.teamMember.findMany({ where: { userId } });
-        const teams = await this.prisma.team.findMany({ where: { id: { in: teamMemberships.map((teamMembership) => teamMembership.teamId) }, deletedAt: null } });
+        const teams = await this.prisma.team.findMany({
+            where: {
+                deletedAt: null,
+                members: {
+                    some: { userId },
+                },
+            },
+        });
         return teams;
     }
 
@@ -139,13 +150,18 @@ export class TeamsService {
             throw new BadRequestException('You are not the owner of the team and hence cannot remove the team');
         }
 
-        return await this.prisma.team.update({ where: { id: teamId }, data: { deletedAt: new Date() } });
+        await this.prisma.$transaction([
+            this.prisma.team.update({ where: { id: teamId }, data: { deletedAt: new Date() } }),
+            this.prisma.project.updateMany({ where: { teamId }, data: { deletedAt: new Date() } }),
+            this.prisma.document.updateMany({ where: { project: { teamId } }, data: { deletedAt: new Date() } }),
+        ]);
     }
 
     async addMember(data: CreateTeamMemberDto) {
 
         // Find the team
         const team = await this.getTeamById(data.teamId);
+        const actionMember = await this.getTeamMember(data.actionMemberId);
 
         if (!team) {
             throw new BadRequestException('Team not found');
@@ -156,6 +172,15 @@ export class TeamsService {
 
         if (existingMembers.some((member) => member.userId === data.userId)) {
             throw new BadRequestException('User is already a member of the team');
+        }
+
+        if (data.role === TeamRole.OWNER) {
+            throw new BadRequestException('Cannot assign OWNER role via addMember');
+        }
+
+        // Optional: only allow assigning ADMIN if caller is OWNER
+        if (data.role === TeamRole.ADMIN && actionMember.role !== TeamRole.OWNER) {
+            throw new BadRequestException('Only the team OWNER can assign ADMIN role');
         }
 
         return await this.prisma.teamMember.create({ data });

@@ -9,11 +9,17 @@ export class CreateTeamMemberDto {
     userId: string
 
     @ApiProperty({ example: 'Team ID' })
+    @IsUUID()
     @IsNotEmpty()
     teamId: string
 
     @ApiProperty({ example: 'Role', enum: TeamRole })
-    @IsEnum(TeamRole)
+    @IsEnum(TeamRole, { message: 'Cannot assign OWNER role via this DTO' })
     @IsNotEmpty()
     role: TeamRole
+
+    @ApiProperty({ example: 'Action Member ID' })
+    @IsUUID()
+    @IsNotEmpty()
+    actionMemberId: string
 }

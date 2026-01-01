@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query } from '@nestjs/common';
 import { TeamsService } from './teams.service';
 import { CreateTeamDto } from './dto/create-team.dto';
 import { CreateTeamMemberDto } from './dto/create-team-member.dto';
@@ -56,5 +56,12 @@ export class TeamsController {
     @HttpCode(HttpStatus.OK)
     async getTeamMembers(@Query('teamId') teamId: string) {
         return await this.teamsService.getTeamMembers(teamId);
+    }
+
+    @Get(":id")
+    @HttpCode(HttpStatus.OK)
+    async getTeamById(@Param('id') id: string) {
+        console.log(id);
+        return await this.teamsService.getTeamById(id);
     }
 }
