@@ -183,7 +183,13 @@ export class TeamsService {
             throw new BadRequestException('Only the team OWNER can assign ADMIN role');
         }
 
-        return await this.prisma.teamMember.create({ data });
+        return await this.prisma.teamMember.create({
+            data: {
+                userId: data.userId,
+                teamId: data.teamId,
+                role: data.role,
+            },
+        });
     }
 
 }

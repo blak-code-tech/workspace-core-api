@@ -11,9 +11,6 @@ import { ProjectsService } from './projects/projects.service';
 import { ProjectsModule } from './projects/projects.module';
 import { AuditLogsController } from './audit-logs/audit-logs.controller';
 import { AuditLogsModule } from './audit-logs/audit-logs.module';
-import { PostsService } from './posts/posts.service';
-import { PostsController } from './posts/posts.controller';
-import { PostsModule } from './posts/posts.module';
 import { ProjectsController } from './projects/projects.controller';
 import { AuthController } from './auth/auth.controller';
 import { TeamsService } from './teams/teams.service';
@@ -23,6 +20,9 @@ import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './auth/auth.guard';
 import { PrismaModule } from './prisma/prisma.module';
 import { HealthModule } from './health/health.module';
+import { DocumentsModule } from './documents/documents.module';
+import { DocumentsService } from './documents/documents.service';
+import { DocumentsController } from './documents/documents.controller';
 
 @Module({
   imports: [
@@ -35,12 +35,12 @@ import { HealthModule } from './health/health.module';
     TeamsModule,
     ProjectsModule,
     AuditLogsModule,
-    PostsModule,
     PrismaModule,
-    HealthModule
+    HealthModule,
+    DocumentsModule
   ],
-  controllers: [AppController, TeamsController, AuditLogsController, PostsController, ProjectsController, AuthController],
-  providers: [AppService, UsersService, ProjectsService, PostsService, TeamsService, AuditLogsService, AuthService, {
+  controllers: [AppController, TeamsController, AuditLogsController, ProjectsController, AuthController, DocumentsController],
+  providers: [AppService, UsersService, ProjectsService, DocumentsService, TeamsService, AuditLogsService, AuthService, {
     provide: APP_GUARD,
     useClass: AuthGuard,
   },],
