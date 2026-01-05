@@ -16,13 +16,14 @@ import { AuthController } from './auth/auth.controller';
 import { TeamsService } from './teams/teams.service';
 import { AuditLogsService } from './audit-logs/audit-logs.service';
 import { AuthService } from './auth/auth.service';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AuthGuard } from './auth/auth.guard';
 import { PrismaModule } from './prisma/prisma.module';
 import { HealthModule } from './health/health.module';
 import { DocumentsModule } from './documents/documents.module';
 import { DocumentsService } from './documents/documents.service';
 import { DocumentsController } from './documents/documents.controller';
+import { AuditLogInterceptor } from './audit-logs/interceptors/audit-log.interceptor';
 
 @Module({
   imports: [
@@ -40,9 +41,22 @@ import { DocumentsController } from './documents/documents.controller';
     DocumentsModule
   ],
   controllers: [AppController, TeamsController, AuditLogsController, ProjectsController, AuthController, DocumentsController],
-  providers: [AppService, UsersService, ProjectsService, DocumentsService, TeamsService, AuditLogsService, AuthService, {
-    provide: APP_GUARD,
-    useClass: AuthGuard,
-  },],
+  providers: [
+    AppService,
+    UsersService,
+    ProjectsService,
+    DocumentsService,
+    TeamsService,
+    AuditLogsService,
+    AuthService,
+    {
+      provide: APP_GUARD,
+      useClass: AuthGuard,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: AuditLogInterceptor,
+    },
+  ],
 })
 export class AppModule { }
