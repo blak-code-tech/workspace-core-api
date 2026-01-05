@@ -9,7 +9,7 @@ export class UsersService {
     constructor(private prismaService: PrismaService) { }
 
     async findOne(email: string) {
-        return this.prismaService.user.findUnique({ where: { email: email } });
+        return this.prismaService.user.findFirst({ where: { email: email } });
     }
 
     async create(user: SignUpDto) {

@@ -3,6 +3,8 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateTeamDto } from './dto/create-team.dto';
 import { TeamRole } from '@prisma/client';
 import { CreateTeamMemberDto } from './dto/create-team-member.dto';
+import { UpdateTeamDto } from './dto/update-team.dto';
+import safeUserSelect from 'src/users/validators/safe-select.validator';
 
 @Injectable()
 export class TeamsService {
@@ -19,6 +21,7 @@ export class TeamsService {
         const team = await this.prisma.team.create({
             data: {
                 name: data.name,
+                description: data.description,
                 members: {
                     create: {
                         userId: data.ownerId,
@@ -31,9 +34,40 @@ export class TeamsService {
         return team;
     }
 
+    async updateTeam(id: string, data: UpdateTeamDto) {
+        const team = await this.getTeamById(id);
+
+        if (!team) {
+            throw new BadRequestException('Team not found');
+        }
+
+        if (data.name === team.name) {
+            throw new BadRequestException('Team name already exists.');
+        }
+
+        return await this.prisma.team.update({
+            where: { id },
+            data: {
+                name: data.name,
+                description: data.description,
+            }
+        });
+    }
+
     async getTeamById(id: string) {
         try {
-            return await this.prisma.team.findFirstOrThrow({ where: { id, deletedAt: null } });
+            return await this.prisma.team.findFirstOrThrow({
+                where: { id, deletedAt: null },
+                include: {
+                    members: {
+                        include: {
+                            user: {
+                                select: safeUserSelect
+                            }
+                        }
+                    }
+                }
+            });
         } catch (error) {
             console.error(error);
             throw new BadRequestException('Team not found');
@@ -48,6 +82,13 @@ export class TeamsService {
                     some: { userId },
                 },
             },
+            include: {
+                _count: {
+                    select: {
+                        members: true
+                    }
+                },
+            },
         });
         return teams;
     }
@@ -59,11 +100,24 @@ export class TeamsService {
             throw new BadRequestException('Team not found');
         }
 
-        return await this.prisma.teamMember.findMany({ where: { teamId } });
+        return await this.prisma.teamMember.findMany({
+            where: { teamId },
+            include: {
+                user: {
+                    select: safeUserSelect
+                },
+            }
+        });
     }
 
     async getTeamMember(teamMemberId: string) {
-        const teamMember = await this.prisma.teamMember.findUnique({ where: { id: teamMemberId } });
+        const teamMember = await this.prisma.teamMember.findUnique({
+            where: { id: teamMemberId }, include: {
+                user: {
+                    select: safeUserSelect
+                }
+            }
+        });
 
         if (!teamMember) {
             throw new BadRequestException('Team member not found');
@@ -191,5 +245,4 @@ export class TeamsService {
             },
         });
     }
-
 }

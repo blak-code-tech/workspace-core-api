@@ -7,7 +7,10 @@ import { TeamRole } from '@prisma/client';
 import { UpdateTeamMemberRoleDto } from './dto/update-team-member-role.dto';
 import { DeleteTeamMemberDto } from './dto/delete-team-member.dto';
 import { DeleteTeamDto } from './dto/delete-team.dto';
+import { UpdateTeamDto } from './dto/update-team.dto';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiBearerAuth()
 @Controller('teams')
 export class TeamsController {
     constructor(private readonly teamsService: TeamsService) { }
@@ -63,5 +66,11 @@ export class TeamsController {
     async getTeamById(@Param('id') id: string) {
         console.log(id);
         return await this.teamsService.getTeamById(id);
+    }
+
+    @Patch(':id')
+    @HttpCode(HttpStatus.OK)
+    async updateTeam(@Param('id') id: string, @Body() data: UpdateTeamDto) {
+        return await this.teamsService.updateTeam(id, data);
     }
 }

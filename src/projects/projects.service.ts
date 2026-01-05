@@ -6,6 +6,8 @@ import { TeamsService } from 'src/teams/teams.service';
 import { CreateProjectMemberDto } from './dto/create-project-member.dto';
 import { UpdateProjectMemberRoleDto } from './dto/update-project-member-role.dto';
 import { DeleteProjectMemberDto } from './dto/delete-project-member.dto';
+import { ProjectMembersDto } from './dto/project-members.dto';
+import safeUserSelect from 'src/users/validators/safe-select.validator';
 
 @Injectable()
 export class ProjectsService {
@@ -56,6 +58,7 @@ export class ProjectsService {
             data: {
                 name: data.name,
                 teamId: data.teamId,
+                description: data.description,
                 projectMembers: {
                     createMany: {
                         data: listOfInitMembers
@@ -67,9 +70,27 @@ export class ProjectsService {
         return newProject;
     }
 
-    async getProjectById(id: string, userId: string) {
+    async getProjectById(id: string, memberId: string) {
         // Check if the project exists
-        const project = await this.prismaService.project.findFirst({ where: { id, projectMembers: { some: { userId } } } });
+        const project = await this.prismaService.project.findFirst({
+            where: {
+                id, deletedAt: null, projectMembers: { some: { userId: memberId } }
+            },
+            include: {
+                projectMembers: {
+                    include: {
+                        user: {
+                            select: safeUserSelect
+                        }
+                    }
+                },
+                _count: {
+                    select: {
+                        projectMembers: true
+                    }
+                }
+            }
+        });
         if (!project) {
             throw new BadRequestException('Project not found');
         }
@@ -77,14 +98,21 @@ export class ProjectsService {
         return project;
     }
 
-    async getProjectMembers(projectId: string, userId: string) {
-        // Check if the project exists
-        const project = await this.getProjectById(projectId, userId);
+    async getProjectMembers(projectMembersDto: ProjectMembersDto) {
+        const project = await this.getProjectById(projectMembersDto.projectId, projectMembersDto.memberId);
         if (!project) {
             throw new BadRequestException('Project not found');
         }
 
-        return this.prismaService.projectMember.findMany({ where: { projectId } });
+        return this.prismaService.projectMember.findMany({
+            where: {
+                projectId: projectMembersDto.projectId
+            }, include: {
+                user: {
+                    select: safeUserSelect
+                }
+            }
+        });
     }
 
     async getProjectsByTeamId(teamId: string, userId: string) {
@@ -94,7 +122,20 @@ export class ProjectsService {
             throw new UnauthorizedException('You are not a member of the team');
         }
 
-        return this.prismaService.project.findMany({ where: { teamId, projectMembers: { some: { userId } } } });
+        return this.prismaService.project.findMany({
+            where: {
+                teamId,
+                deletedAt: null,
+                projectMembers: { some: { userId } }
+            },
+            include: {
+                _count: {
+                    select: {
+                        projectMembers: true
+                    }
+                }
+            }
+        });
     }
 
     async updateProject(id: string, data: UpdateProjectDto) {
@@ -115,7 +156,8 @@ export class ProjectsService {
 
         return this.prismaService.project.update({
             where: { id }, data: {
-                name: data.name
+                name: data.name,
+                description: data.description
             }
         });
     }

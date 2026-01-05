@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsNotEmpty, IsString, IsUUID, MinLength } from "class-validator";
+import { IsNotEmpty, IsOptional, IsString, IsUUID, MinLength } from "class-validator";
 
 export class CreateTeamDto {
     @ApiProperty({ example: 'Team Name' })
@@ -7,6 +7,11 @@ export class CreateTeamDto {
     @IsNotEmpty()
     @MinLength(3)
     name: string;
+
+    @ApiProperty({ example: 'Team Description' })
+    @IsString()
+    @IsOptional()
+    description?: string;
 
     @ApiProperty({ example: 'User ID' })
     @IsUUID()

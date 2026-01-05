@@ -22,13 +22,14 @@ model User {
 }
 
 model Team {
-  id        String       @id @default(uuid())
-  name      String
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
-  deletedAt DateTime?
-  projects  Project[]
-  members   TeamMember[]
+  id          String       @id @default(uuid())
+  name        String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  deletedAt   DateTime?
+  description String?
+  projects    Project[]
+  members     TeamMember[]
 }
 
 model TeamMember {
@@ -52,6 +53,7 @@ model Project {
   updatedAt      DateTime        @updatedAt
   deletedAt      DateTime?
   teamId         String
+  description    String?
   documents      Document[]
   team           Team            @relation(fields: [teamId], references: [id])
   projectMembers ProjectMember[]
@@ -63,12 +65,12 @@ model ProjectMember {
   id        String      @id @default(uuid())
   userId    String
   projectId String
-  addedBy   String
-  role      ProjectRole @default(VIEWER)
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
-  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  addedBy   String
+  role      ProjectRole @default(VIEWER)
   project   Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, projectId])
   @@index([projectId])

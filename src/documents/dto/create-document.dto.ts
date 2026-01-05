@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsNotEmpty, IsString, IsUUID } from "class-validator";
+import { IsNotEmpty, IsOptional, IsString, IsUUID } from "class-validator";
 
 export class CreateDocumentDto {
     @ApiProperty({ example: 'Document Title' })
@@ -9,7 +9,7 @@ export class CreateDocumentDto {
 
     @ApiProperty({ example: 'Document Content' })
     @IsString()
-    @IsNotEmpty()
+    @IsOptional()
     content: string;
 
     @ApiProperty({ example: 'Project ID' })
