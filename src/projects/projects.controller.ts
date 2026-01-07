@@ -6,8 +6,9 @@ import { CreateProjectMemberDto } from './dto/create-project-member.dto';
 import { UpdateProjectMemberRoleDto } from './dto/update-project-member-role.dto';
 import { DeleteProjectDto } from './dto/delete-project.dto';
 import { DeleteProjectMemberDto } from './dto/delete-project-member.dto';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger';
 import { ProjectMembersDto } from './dto/project-members.dto';
+import { PaginationQueryDto } from 'src/common/pagination/pagination.dto';
 
 @ApiBearerAuth()
 @Controller('projects')
@@ -22,14 +23,34 @@ export class ProjectsController {
 
     @Get('members')
     @HttpCode(HttpStatus.OK)
-    async getProjectMembers(@Body() projectMembersDto: ProjectMembersDto) {
-        return this.projectsService.getProjectMembers(projectMembersDto);
+    @ApiOperation({ summary: 'Get project members with pagination' })
+    @ApiResponse({ status: 200, description: 'Paginated list of project members' })
+    async getProjectMembers(
+        @Body() projectMembersDto: ProjectMembersDto,
+        @Query() paginationQuery: PaginationQueryDto,
+    ) {
+        return this.projectsService.getProjectMembers(
+            projectMembersDto,
+            paginationQuery.cursor,
+            paginationQuery.limit,
+        );
     }
 
     @Get()
     @HttpCode(HttpStatus.OK)
-    async getProjectsByTeamId(@Query('teamId') teamId: string, @Query('userId') userId: string) {
-        return this.projectsService.getProjectsByTeamId(teamId, userId);
+    @ApiOperation({ summary: 'Get projects by team ID with pagination' })
+    @ApiResponse({ status: 200, description: 'Paginated list of projects' })
+    async getProjectsByTeamId(
+        @Query('teamId') teamId: string,
+        @Query('userId') userId: string,
+        @Query() paginationQuery: PaginationQueryDto,
+    ) {
+        return this.projectsService.getProjectsByTeamId(
+            teamId,
+            userId,
+            paginationQuery.cursor,
+            paginationQuery.limit,
+        );
     }
 
     @Get(':id')

@@ -8,6 +8,8 @@ import { UpdateProjectMemberRoleDto } from './dto/update-project-member-role.dto
 import { DeleteProjectMemberDto } from './dto/delete-project-member.dto';
 import { ProjectMembersDto } from './dto/project-members.dto';
 import safeUserSelect from 'src/users/validators/safe-select.validator';
+import { PaginationHelper } from 'src/common/pagination/pagination.helper';
+import { PaginatedResponse } from 'src/common/pagination/pagination.types';
 
 @Injectable()
 export class ProjectsService {
@@ -98,44 +100,82 @@ export class ProjectsService {
         return project;
     }
 
-    async getProjectMembers(projectMembersDto: ProjectMembersDto) {
+    async getProjectMembers(
+        projectMembersDto: ProjectMembersDto,
+        cursor?: string,
+        limit: number = 20,
+    ): Promise<PaginatedResponse<any>> {
         const project = await this.getProjectById(projectMembersDto.projectId, projectMembersDto.memberId);
         if (!project) {
             throw new BadRequestException('Project not found');
         }
 
-        return this.prismaService.projectMember.findMany({
-            where: {
-                projectId: projectMembersDto.projectId
-            }, include: {
+        const normalizedLimit = PaginationHelper.normalizeLimit(limit);
+
+        const where: any = {
+            projectId: projectMembersDto.projectId,
+            ...(cursor && {
+                id: { lt: PaginationHelper.decodeCursor(cursor) },
+            }),
+        };
+
+        const projectMembers = await this.prismaService.projectMember.findMany({
+            where,
+            include: {
                 user: {
                     select: safeUserSelect
                 }
-            }
+            },
+            orderBy: [
+                { createdAt: 'desc' },
+                { id: 'desc' },
+            ],
+            take: normalizedLimit + 1,
         });
+
+        return PaginationHelper.buildPaginatedResponse(projectMembers, normalizedLimit);
     }
 
-    async getProjectsByTeamId(teamId: string, userId: string) {
+    async getProjectsByTeamId(
+        teamId: string,
+        userId: string,
+        cursor?: string,
+        limit: number = 20,
+    ): Promise<PaginatedResponse<any>> {
         // Check if the user is a member of the team
         const teamMember = await this.prismaService.teamMember.findFirst({ where: { teamId, userId } });
         if (!teamMember) {
             throw new UnauthorizedException('You are not a member of the team');
         }
 
-        return this.prismaService.project.findMany({
-            where: {
-                teamId,
-                deletedAt: null,
-                projectMembers: { some: { userId } }
-            },
+        const normalizedLimit = PaginationHelper.normalizeLimit(limit);
+
+        const where: any = {
+            teamId,
+            deletedAt: null,
+            projectMembers: { some: { userId } },
+            ...(cursor && {
+                id: { lt: PaginationHelper.decodeCursor(cursor) },
+            }),
+        };
+
+        const projects = await this.prismaService.project.findMany({
+            where,
             include: {
                 _count: {
                     select: {
                         projectMembers: true
                     }
                 }
-            }
+            },
+            orderBy: [
+                { createdAt: 'desc' },
+                { id: 'desc' },
+            ],
+            take: normalizedLimit + 1,
         });
+
+        return PaginationHelper.buildPaginatedResponse(projects, normalizedLimit);
     }
 
     async updateProject(id: string, data: UpdateProjectDto) {

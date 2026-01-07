@@ -108,7 +108,8 @@ export class AuditLogInterceptor implements NestInterceptor {
         if (url.includes('/auth/sign-in')) return AuditAction.SIGN_IN;
         if (url.includes('/auth/sign-up')) return AuditAction.SIGN_UP;
         if (url.includes('/auth/refresh')) return AuditAction.REFRESH_TOKEN;
-        if (url.includes('/auth/sign-out')) return AuditAction.SIGN_OUT;
+        if (url.includes('/auth/logout-all')) return AuditAction.SIGN_OUT_ALL;
+        if (url.includes('/auth/logout')) return AuditAction.SIGN_OUT;
 
         // Team routes
         if (url.match(/\/teams$/) && method === 'POST') return AuditAction.CREATE_TEAM;

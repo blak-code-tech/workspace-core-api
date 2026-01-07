@@ -3,6 +3,8 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateAuditLogDto } from './dto/create-audit-log.dto';
 import { QueryAuditLogsDto } from './dto/query-audit-logs.dto';
 import { AuditAction } from './enums/audit-action.enum';
+import { PaginationHelper } from 'src/common/pagination/pagination.helper';
+import { PaginatedResponse } from 'src/common/pagination/pagination.types';
 
 @Injectable()
 export class AuditLogsService {
@@ -25,10 +27,12 @@ export class AuditLogsService {
     }
 
     /**
-     * Get all audit logs with filtering and pagination
+     * Get all audit logs with filtering and cursor-based pagination
      */
-    async findAll(queryDto: QueryAuditLogsDto) {
-        const { userId, action, entityType, entityId, startDate, endDate, page = 1, limit = 50 } = queryDto;
+    async findAll(queryDto: QueryAuditLogsDto): Promise<PaginatedResponse<any>> {
+        const { userId, action, entityType, entityId, startDate, endDate, cursor, limit = 50 } = queryDto;
+
+        const normalizedLimit = PaginationHelper.normalizeLimit(limit);
 
         const where: any = {};
 
@@ -43,33 +47,26 @@ export class AuditLogsService {
             if (endDate) where.createdAt.lte = new Date(endDate);
         }
 
-        const skip = (page - 1) * limit;
+        if (cursor) {
+            where.id = { lt: PaginationHelper.decodeCursor(cursor) };
+        }
 
-        const [logs, total] = await Promise.all([
-            this.prismaService.auditLog.findMany({
-                where,
-                skip,
-                take: limit,
-                orderBy: { createdAt: 'desc' },
-            }),
-            this.prismaService.auditLog.count({ where }),
-        ]);
+        const logs = await this.prismaService.auditLog.findMany({
+            where,
+            orderBy: [
+                { createdAt: 'desc' },
+                { id: 'desc' },
+            ],
+            take: normalizedLimit + 1,
+        });
 
-        return {
-            data: logs,
-            meta: {
-                total,
-                page,
-                limit,
-                totalPages: Math.ceil(total / limit),
-            },
-        };
+        return PaginationHelper.buildPaginatedResponse(logs, normalizedLimit);
     }
 
     /**
-     * Get audit logs for a specific user
+     * Get audit logs for a specific user with cursor-based pagination
      */
-    async findByUser(userId: string, queryDto: QueryAuditLogsDto) {
+    async findByUser(userId: string, queryDto: QueryAuditLogsDto): Promise<PaginatedResponse<any>> {
         return this.findAll({ ...queryDto, userId });
     }
 

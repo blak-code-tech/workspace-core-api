@@ -1,10 +1,11 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post } from '@nestjs/common';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { DocumentsService } from './documents.service';
 import { CreateDocumentDto } from './dto/create-document.dto';
 import { ProjectDocumentDto } from './dto/project-document.dto';
 import { UpdateDocumentDto } from './dto/update-document.dto';
 import { DeleteDocumentDto } from './dto/delete-document.dto';
+import { PaginationQueryDto } from 'src/common/pagination/pagination.dto';
 
 @ApiBearerAuth()
 @Controller('documents')
@@ -25,8 +26,18 @@ export class DocumentsController {
 
     @Get()
     @HttpCode(HttpStatus.OK)
-    async getDocumentsByProjectId(@Body() data: ProjectDocumentDto) {
-        return this.documentsService.getDocumentsByProjectId(data.projectId, data.userId);
+    @ApiOperation({ summary: 'Get documents by project ID with pagination' })
+    @ApiResponse({ status: 200, description: 'Paginated list of documents' })
+    async getDocumentsByProjectId(
+        @Body() data: ProjectDocumentDto,
+        @Query() paginationQuery: PaginationQueryDto,
+    ) {
+        return this.documentsService.getDocumentsByProjectId(
+            data.projectId,
+            data.userId,
+            paginationQuery.cursor,
+            paginationQuery.limit,
+        );
     }
 
     @Patch(":id")

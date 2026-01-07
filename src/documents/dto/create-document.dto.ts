@@ -2,22 +2,34 @@ import { ApiProperty } from "@nestjs/swagger";
 import { IsNotEmpty, IsOptional, IsString, IsUUID } from "class-validator";
 
 export class CreateDocumentDto {
-    @ApiProperty({ example: 'Document Title' })
+    @ApiProperty({
+        description: 'Document title',
+        example: 'Sample Document'
+    })
     @IsString()
     @IsNotEmpty()
     title: string;
 
-    @ApiProperty({ example: 'Document Content' })
+    @ApiProperty({
+        description: 'Document content',
+        example: 'Document Content'
+    })
     @IsString()
     @IsOptional()
     content: string;
 
-    @ApiProperty({ example: 'Project ID' })
+    @ApiProperty({
+        description: 'Project ID',
+        example: 'Project ID'
+    })
     @IsUUID()
     @IsNotEmpty()
     projectId: string;
 
-    @ApiProperty({ example: 'Author ID' })
+    @ApiProperty({
+        description: 'Author ID',
+        example: 'Author ID'
+    })
     @IsUUID()
     @IsNotEmpty()
     authorId: string;

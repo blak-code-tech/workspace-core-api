@@ -18,6 +18,7 @@ model User {
   role           PlatformRole    @default(USER)
   documents      Document[]
   projectMembers ProjectMember[]
+  refreshTokens  RefreshToken[]
   teamMembers    TeamMember[]
 }
 
@@ -30,6 +31,8 @@ model Team {
   description String?
   projects    Project[]
   members     TeamMember[]
+
+  @@index([deletedAt, createdAt, id])
 }
 
 model TeamMember {
@@ -44,6 +47,7 @@ model TeamMember {
 
   @@unique([userId, teamId])
   @@index([teamId])
+  @@index([teamId, createdAt, id])
 }
 
 model Project {
@@ -59,6 +63,8 @@ model Project {
   projectMembers ProjectMember[]
 
   @@index([teamId])
+  @@index([teamId, createdAt, id])
+  @@index([teamId, deletedAt, createdAt, id])
 }
 
 model ProjectMember {
@@ -75,6 +81,7 @@ model ProjectMember {
   @@unique([userId, projectId])
   @@index([projectId])
   @@index([addedBy])
+  @@index([projectId, createdAt, id])
 }
 
 model Document {
@@ -91,6 +98,7 @@ model Document {
 
   @@index([projectId])
   @@index([authorId])
+  @@index([projectId, deletedAt, createdAt, id])
 }
 
 model AuditLog {
@@ -108,6 +116,24 @@ model AuditLog {
   @@index([action])
   @@index([createdAt])
   @@index([entityType, entityId])
+  @@index([createdAt, id])
+  @@index([userId, createdAt, id])
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  userId    String
+  token     String    @unique
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+  revokedAt DateTime?
+  userAgent String?
+  ipAddress String?
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
 }
 
 enum PlatformRole {

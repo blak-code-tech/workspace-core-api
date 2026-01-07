@@ -5,6 +5,8 @@ import { TeamRole } from '@prisma/client';
 import { CreateTeamMemberDto } from './dto/create-team-member.dto';
 import { UpdateTeamDto } from './dto/update-team.dto';
 import safeUserSelect from 'src/users/validators/safe-select.validator';
+import { PaginationHelper } from 'src/common/pagination/pagination.helper';
+import { PaginatedResponse } from 'src/common/pagination/pagination.types';
 
 @Injectable()
 export class TeamsService {
@@ -12,9 +14,9 @@ export class TeamsService {
 
     async createTeam(data: CreateTeamDto) {
         // Before creating we need to ensure that the team name does not already exist for the user creating it
-        const existingTeams = await this.getTeamsByUserId(data.ownerId);
+        const existingTeamsResponse = await this.getTeamsByUserId(data.ownerId);
 
-        if (existingTeams.some((team) => team.name === data.name)) {
+        if (existingTeamsResponse.data.some((team) => team.name === data.name)) {
             throw new BadRequestException('Team name already exists.');
         }
 
@@ -74,14 +76,25 @@ export class TeamsService {
         }
     }
 
-    async getTeamsByUserId(userId: string) {
-        const teams = await this.prisma.team.findMany({
-            where: {
-                deletedAt: null,
-                members: {
-                    some: { userId },
-                },
+    async getTeamsByUserId(
+        userId: string,
+        cursor?: string,
+        limit: number = 20,
+    ): Promise<PaginatedResponse<any>> {
+        const normalizedLimit = PaginationHelper.normalizeLimit(limit);
+
+        const where: any = {
+            deletedAt: null,
+            members: {
+                some: { userId },
             },
+            ...(cursor && {
+                id: { lt: PaginationHelper.decodeCursor(cursor) },
+            }),
+        };
+
+        const teams = await this.prisma.team.findMany({
+            where,
             include: {
                 _count: {
                     select: {
@@ -89,25 +102,51 @@ export class TeamsService {
                     }
                 },
             },
+            orderBy: [
+                { createdAt: 'desc' },
+                { id: 'desc' },
+            ],
+            take: normalizedLimit + 1,
         });
-        return teams;
+
+        return PaginationHelper.buildPaginatedResponse(teams, normalizedLimit);
     }
 
-    async getTeamMembers(teamId: string) {
+    async getTeamMembers(
+        teamId: string,
+        cursor?: string,
+        limit: number = 20,
+    ): Promise<PaginatedResponse<any>> {
         const team = await this.getTeamById(teamId);
 
         if (!team) {
             throw new BadRequestException('Team not found');
         }
 
-        return await this.prisma.teamMember.findMany({
-            where: { teamId },
+        const normalizedLimit = PaginationHelper.normalizeLimit(limit);
+
+        const where: any = {
+            teamId,
+            ...(cursor && {
+                id: { lt: PaginationHelper.decodeCursor(cursor) },
+            }),
+        };
+
+        const teamMembers = await this.prisma.teamMember.findMany({
+            where,
             include: {
                 user: {
                     select: safeUserSelect
                 },
-            }
+            },
+            orderBy: [
+                { createdAt: 'desc' },
+                { id: 'desc' },
+            ],
+            take: normalizedLimit + 1,
         });
+
+        return PaginationHelper.buildPaginatedResponse(teamMembers, normalizedLimit);
     }
 
     async getTeamMember(teamMemberId: string) {
@@ -222,9 +261,9 @@ export class TeamsService {
         }
 
         // we need to make sure the member is not already a member of the team
-        const existingMembers = await this.getTeamMembers(data.teamId);
+        const existingMembersResponse = await this.getTeamMembers(data.teamId);
 
-        if (existingMembers.some((member) => member.userId === data.userId)) {
+        if (existingMembersResponse.data.some((member) => member.userId === data.userId)) {
             throw new BadRequestException('User is already a member of the team');
         }
 

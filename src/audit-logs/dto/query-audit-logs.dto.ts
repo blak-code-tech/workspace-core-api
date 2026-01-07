@@ -28,10 +28,8 @@ export class QueryAuditLogsDto {
     endDate?: string;
 
     @IsOptional()
-    @Type(() => Number)
-    @IsInt()
-    @Min(1)
-    page?: number = 1;
+    @IsString()
+    cursor?: string;
 
     @IsOptional()
     @Type(() => Number)

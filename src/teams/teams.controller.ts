@@ -8,7 +8,8 @@ import { UpdateTeamMemberRoleDto } from './dto/update-team-member-role.dto';
 import { DeleteTeamMemberDto } from './dto/delete-team-member.dto';
 import { DeleteTeamDto } from './dto/delete-team.dto';
 import { UpdateTeamDto } from './dto/update-team.dto';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { PaginationQueryDto } from 'src/common/pagination/pagination.dto';
 
 @ApiBearerAuth()
 @Controller('teams')
@@ -51,14 +52,32 @@ export class TeamsController {
 
     @Get('user-teams')
     @HttpCode(HttpStatus.OK)
-    async getTeamsByUserId(@Query('userId') userId: string) {
-        return await this.teamsService.getTeamsByUserId(userId);
+    @ApiOperation({ summary: 'Get teams by user ID with pagination' })
+    @ApiResponse({ status: 200, description: 'Paginated list of teams' })
+    async getTeamsByUserId(
+        @Query('userId') userId: string,
+        @Query() paginationQuery: PaginationQueryDto,
+    ) {
+        return await this.teamsService.getTeamsByUserId(
+            userId,
+            paginationQuery.cursor,
+            paginationQuery.limit,
+        );
     }
 
     @Get('members')
     @HttpCode(HttpStatus.OK)
-    async getTeamMembers(@Query('teamId') teamId: string) {
-        return await this.teamsService.getTeamMembers(teamId);
+    @ApiOperation({ summary: 'Get team members with pagination' })
+    @ApiResponse({ status: 200, description: 'Paginated list of team members' })
+    async getTeamMembers(
+        @Query('teamId') teamId: string,
+        @Query() paginationQuery: PaginationQueryDto,
+    ) {
+        return await this.teamsService.getTeamMembers(
+            teamId,
+            paginationQuery.cursor,
+            paginationQuery.limit,
+        );
     }
 
     @Get(":id")

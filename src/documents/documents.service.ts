@@ -5,6 +5,8 @@ import { UpdateDocumentDto } from './dto/update-document.dto';
 import { ProjectsService } from 'src/projects/projects.service';
 import safeUserSelect from 'src/users/validators/safe-select.validator';
 import { DeleteDocumentDto } from './dto/delete-document.dto';
+import { PaginationHelper } from 'src/common/pagination/pagination.helper';
+import { PaginatedResponse } from 'src/common/pagination/pagination.types';
 
 @Injectable()
 export class DocumentsService {
@@ -39,20 +41,43 @@ export class DocumentsService {
         return document;
     }
 
-    async getDocumentsByProjectId(projectId: string, userId: string) {
+    async getDocumentsByProjectId(
+        projectId: string,
+        userId: string,
+        cursor?: string,
+        limit: number = 20,
+    ): Promise<PaginatedResponse<any>> {
         const project = await this.projectService.getProjectById(projectId, userId);
 
         if (!project) {
             throw new UnauthorizedException('You are not a member of the project and hence cannot access the document');
         }
 
-        return this.prismaService.document.findMany({
-            where: { projectId, deletedAt: null }, include: {
+        const normalizedLimit = PaginationHelper.normalizeLimit(limit);
+
+        const where: any = {
+            projectId,
+            deletedAt: null,
+            ...(cursor && {
+                id: { lt: PaginationHelper.decodeCursor(cursor) },
+            }),
+        };
+
+        const documents = await this.prismaService.document.findMany({
+            where,
+            include: {
                 author: {
                     select: safeUserSelect
                 }
-            }
+            },
+            orderBy: [
+                { createdAt: 'desc' },
+                { id: 'desc' },
+            ],
+            take: normalizedLimit + 1,
         });
+
+        return PaginationHelper.buildPaginatedResponse(documents, normalizedLimit);
     }
 
     async updateDocument(id: string, data: UpdateDocumentDto) {

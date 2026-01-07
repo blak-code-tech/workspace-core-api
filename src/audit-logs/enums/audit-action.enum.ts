@@ -3,6 +3,7 @@ export enum AuditAction {
     SIGN_IN = 'SIGN_IN',
     SIGN_UP = 'SIGN_UP',
     SIGN_OUT = 'SIGN_OUT',
+    SIGN_OUT_ALL = 'SIGN_OUT_ALL',
     REFRESH_TOKEN = 'REFRESH_TOKEN',
 
     // Team actions

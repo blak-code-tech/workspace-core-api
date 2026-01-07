@@ -35,7 +35,7 @@ export class AuditLogsController {
 
     /**
      * Get all audit logs with filters (Admin only)
-     * GET /audit-logs?userId=xxx&action=xxx&startDate=xxx&endDate=xxx&page=1&limit=50
+     * GET /audit-logs?userId=xxx&action=xxx&startDate=xxx&endDate=xxx&cursor=xxx&limit=50
      */
     @Get()
     async findAll(@Query() queryDto: QueryAuditLogsDto, @Request() req) {
