@@ -1,155 +1,169 @@
-# workspace-core-api
+# Workspace Core API
 
-[![NestJS](https://img.shields.io/badge/NestJS-v10.2.2-red)](https://nestjs.com/)
-[![Prisma](https://img.shields.io/badge/Prisma-v5.1-blue)](https://www.prisma.io/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-v16.0-blue)](https://www.postgresql.org/)
-[![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
+Production-ready NestJS workspace architecture designed for building scalable, modular backend systems.
 
 ---
 
-## Overview
+## 🚀 Overview
 
-**workspace-core-api** is a production-ready, multi-tenant backend system built with [NestJS](https://nestjs.com/) and [PostgreSQL](https://www.postgresql.org/) using [Prisma ORM](https://www.prisma.io/).
+Workspace Core API is a structured NestJS monorepo template built for real-world applications — not just demos.
 
-It models the core backend architecture of modern SaaS collaboration tools, such as Notion, Linear, and ClickUp, emphasizing **multi-tenant isolation, role-based access control, and secure resource management**. This project is intended as both a portfolio showcase and a reference implementation for building SaaS-ready backends.
+It provides a clean, scalable foundation for:
+- Multi-app systems
+- Shared libraries
+- Modular backend architecture
+- Long-term maintainability
 
-The system supports:
-
-- JWT-based authentication with platform-level roles
-- Team and project memberships with fine-grained roles
-- Scoped access to resources (documents)
-- Audit logging and soft-deletion strategies
-- Clean NestJS module architecture
+This template reflects patterns used in production systems where separation of concerns, reusability, and scalability are critical.
 
 ---
 
-## Key Features
+## 🧠 Why This Exists
 
-### Authentication & Users
+Most NestJS starter templates are great for small apps but quickly break down as complexity grows.
 
-- JWT-based authentication
-- Platform-level roles: `SUPER_ADMIN`, `ADMIN`, `MANAGER`, `USER`
-- Secure password storage
-- Multi-tenant awareness for users
+Common problems:
+- Tight coupling between modules
+- Poor separation of concerns
+- Difficulty scaling into multi-service architectures
+- Code duplication across features
 
-### Teams & TeamMembers
-
-- Team creation and management
-- Team-level roles: `OWNER`, `ADMIN`, `MEMBER`
-- Membership management with unique constraints
-- Soft-deletion of teams
-
-### Projects & ProjectMembers
-
-- Projects belong to teams
-- Project-level roles: `ADMIN`, `EDITOR`, `VIEWER`
-- Scoped access for users
-- Soft-delete support
-
-### Documents
-
-- Documents belong to projects (team inferred via project)
-- Author tracking
-- Soft-deletion
-- Indexed for performant queries
-
-### Audit Logging
-
-- Logs critical actions (create, update, delete)
-- Optional `meta` JSON for action context
-- Indexed for fast lookups
-- Cursor-based pagination for efficient querying
-
-### Pagination
-
-- **Cursor-based pagination** on all list endpoints
-- Consistent performance regardless of dataset size
-- Prevents duplicate/missing items during pagination
-- Scalable to millions of records
-- See [Pagination Guide](docs/PAGINATION.md) for details
-
-### Authorization & Guards
-
-- Decorator-based role enforcement (`@TeamRoles`)
-- Multi-level role validation in services
-- Prevents privilege escalation
+This template solves that by introducing:
+- A workspace-based structure
+- Clear boundaries between apps and shared logic
+- A modular architecture that scales with your product
 
 ---
 
-## Tech Stack
+## 🏗️ Architecture
 
-- **Backend Framework:** [NestJS](https://nestjs.com/)
-- **Database:** [PostgreSQL](https://www.postgresql.org/)
-- **ORM:** [Prisma](https://www.prisma.io/)
-- **Validation:** [class-validator](https://github.com/typestack/class-validator)
-- **Authentication:** JWT
-- **API Documentation:** [Swagger/OpenAPI](https://swagger.io/)
+This project follows a **workspace + modular architecture**:
 
----
+apps/
+api/                # Main application (HTTP / REST / GraphQL)
 
-## Getting Started
+libs/
+core/               # Core business logic
+shared/             # Shared utilities, helpers, constants
+database/           # Database layer and integrations
 
-### Prerequisites
+### Key Principles
 
-- Node.js >= 18
-- pnpm >= 8
-- Docker (for PostgreSQL)
+- **Separation of concerns**  
+  Each layer has a clear responsibility
 
-### Setup
+- **Reusability**  
+  Shared logic lives in libs, not duplicated across apps
 
-1. **Clone the repository**
+- **Scalability**  
+  Designed to evolve into microservices if needed
 
-```bash
-git clone https://github.com/blak-code-tech/workspace-core-api.git
-cd workspace-core-api
-```
-
-2. **Install dependencies**
-
-```bash
-pnpm install
-```
-
-3. **Configure environment variables**<br>
-   **Create a .env file with:**
-
-```bash
-DATABASE_URL="postgresql://workspace_user:workspace_password@localhost:5432/workspace_core"
-JWT_SECRET="your_jwt_secret_here"
-```
-
-4. **Start PostgreSQL via Docker**
-
-```bash
-docker compose up -d
-```
-
-5. **Run Prisma migrations**
-
-```bash
-pnpm exec prisma migrate dev
-```
-
-6. **Start the backend**
-
-```bash
-pnpm run start:dev
-```
-
-7. **Access Swagger API docs**<br>
-   Open in your browser:
-
-```code
-http://localhost:3000/api
-```
+- **Maintainability**  
+  Clean structure that teams can scale with
 
 ---
 
-## API Documentation
+## ⚙️ Features
 
-- **[Pagination Guide](docs/PAGINATION.md)** - Comprehensive guide to cursor-based pagination
-- **[Audit Logs](docs/AUDIT_LOGS.md)** - Audit logging system documentation
-- **[Next.js Frontend Guide](docs/NEXTJS_FRONTEND_GUIDE.md)** - Frontend integration guide
-- **[Project Specification](docs/PROJECT_SPEC.md)** - Detailed project specifications
+- 🧩 Modular NestJS architecture  
+- 🏗️ Workspace-based structure (apps + libs)  
+- 🔁 Shared libraries for reusable logic  
+- 📦 Clean separation of core, infrastructure, and utilities  
+- ⚡ Ready for scaling into multi-service systems  
+- 🧪 Structured for adding testing (e.g., Playwright, unit tests)  
+- 🔐 Environment-ready configuration patterns  
+- 🚀 Production-oriented design  
+
+---
+
+## 🔄 How It Scales
+
+This architecture supports growth from:
+
+**Single API → Multi-App → Distributed Systems**
+
+You can:
+- Add more apps (admin, workers, microservices)
+- Extract services into independent deployments
+- Share logic safely across services
+- Introduce queues, real-time systems, or event-driven flows
+
+---
+
+## 🧪 Testing
+
+Designed to support:
+- Unit testing
+- Integration testing
+- End-to-end testing (e.g., Playwright)
+
+Testing can be layered across apps and shared libraries for full coverage.
+
+---
+
+## 🧰 Tech Stack
+
+- **Framework:** NestJS  
+- **Language:** TypeScript  
+- **Architecture:** Monorepo (Workspace-based)  
+- **Pattern:** Modular + Layered Design  
+
+---
+
+## 📦 Getting Started
+
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm run start:dev
+```
+
+⸻
+
+📌 Use Cases
+
+This template is ideal for:
+	•	SaaS backends
+	•	Multi-tenant applications
+	•	Real-time systems
+	•	API-first platforms
+	•	Systems requiring shared logic across services
+
+⸻
+
+🔍 Inspired by Real-World Systems
+
+This structure is influenced by production backend systems where:
+	•	multiple services share logic
+	•	teams collaborate across modules
+	•	scalability and maintainability are essential
+
+⸻
+
+📈 Future Enhancements
+	•	Queue integration (BullMQ / Redis)
+	•	Microservice support
+	•	Event-driven architecture
+	•	Advanced testing setup
+	•	CI/CD pipeline examples
+
+⸻
+
+🤝 Contributing
+
+Contributions are welcome.
+Feel free to open issues or submit pull requests to improve the architecture.
+
+⸻
+
+📄 License
+
+MIT
+
+⸻
+
+Built with a focus on real-world scalability, not just quick starts.
 
 ---
